@@ -282,9 +282,18 @@ class BeachLine:
         if node_color == 0:
             self.delete_fixup(temp_node)
 
+        if node.prev is not None:
+            node.prev.next = node.next
+
+        if node.next is not None:
+            node.next.prev = node.prev
+
     def delete_fixup(self, node):
         # 4 cases
-        while node != self.root and node.color == 0:
+        if node is None:
+            return
+
+        while node is not self.root and node.color == 0:
             # node is not root and color is black
             if node == node.parent.left:
                 # node is left node

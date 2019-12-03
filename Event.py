@@ -19,7 +19,7 @@ class Event:
         self.point = point
 
     def __lt__(self, other):
-        return self.y > other.y or (self.y == other.y and self.y < other.y)
+        return self.y > other.y
 
     def __hash__(self):
         return hash(tuple(self.point))

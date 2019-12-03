@@ -31,18 +31,19 @@ class Events:
 
             parent = get_parent_idx(idx)
 
-            while self.heap[idx] < self.heap[parent] and idx != 0:
+            while idx != 0 and self.heap[idx] < self.heap[parent]:
                 self.heap[idx], self.heap[parent] = self.heap[parent], self.heap[idx]
                 idx = parent
+                parent = get_parent_idx(idx)
 
     def heapify(self, idx):
-        left = get_left_idx(idx)
-        right = get_left_idx(idx)
-
         min_idx = idx
 
         while True:
             idx = min_idx
+
+            left = get_left_idx(idx)
+            right = get_right_idx(idx)
 
             if left < self.length and self.heap[left] < self.heap[min_idx]:
                 min_idx = left
@@ -63,6 +64,8 @@ class Events:
         self.heap[0], self.heap[self.length-1] = self.heap[self.length-1], self.heap[0]
 
         self.length -= 1
+
+        self.heap.pop()
 
         self.heapify(0)
 

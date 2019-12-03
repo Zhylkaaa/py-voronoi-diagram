@@ -31,16 +31,19 @@ class l2(Metric):
         x1, y1 = point1
         x2, y2 = point2
 
-        d1 = 1/(2.0*(y1 - l))
-        d2 = 1/(2.0*(y2 - l))
+        d1 = 1.0/(2.0*(y1 - l))
+        d2 = 1.0/(2.0*(y2 - l))
 
         a = d1 - d2
         b = 2.0 * (d2*x2 - d1*x1)
-        c = (x1*x1 - l*l + y1*y1) * d1 + (x2*x2 - l*l + y2*y2) * d2
+        c = (x1*x1 - l*l + y1*y1) * d1 - (x2*x2 - l*l + y2*y2) * d2
 
-        delta = b*b - 4*a*c
+        delta = b*b - 4.0*a*c
 
-        return (-b + np.sqrt(delta)) / (2.0*a)
+        if delta < 0:
+            print(delta)
+
+        return (-b + np.sqrt(np.abs(delta))) / (2.0*a)
 
     @staticmethod
     def compute_convergence_point(point1, point2, point3):
@@ -59,4 +62,4 @@ class l2(Metric):
 
         y = center[1] - r
 
-        return center, y
+        return y, center

@@ -14,9 +14,11 @@ class FortuneAlgorithm:
         self.diagram = VoronoiDiagram(points)
 
         if metric is not None:
-            self.compute_convergence_point = metric
+            self.metric = metric
+            self.compute_convergence_point = metric.compute_convergence_point
         elif named_metric in FortuneAlgorithm.metrics:
             self.metric = FortuneAlgorithm.metrics[named_metric]
+            self.compute_convergence_point = metric.compute_convergence_point
         else:
             raise ValueError('Can\'t resolve metric function', metric, 'please choose from list, \
             or implement your own. list: ', FortuneAlgorithm.metrics.keys())
