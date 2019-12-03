@@ -5,6 +5,15 @@ from BeachLine import Arc, BeachLine
 from metrix import l2
 from voronoi_diagram import VoronoiDiagram
 
+from enum import Enum
+
+
+class Side(Enum):
+    left = 0
+    bottom = 1
+    right = 2
+    top = 3
+
 
 class FortuneAlgorithm:
     metrics = {'l2': l2}
@@ -147,7 +156,7 @@ class FortuneAlgorithm:
         point = event.point
         arc = event.arc
 
-        voronoi_vertex = self.diagram.create_vertex(point)
+        voronoi_vertex = self.diagram.add_vertex(point)
 
         left_arc = arc.prev
         right_arc = arc.next
@@ -165,3 +174,68 @@ class FortuneAlgorithm:
 
         if right_arc.next is not None:
             self.add_event(left_arc, right_arc, right_arc.next, events, event.y)
+
+    def adjust_box(self, x_left, y_left, x_right, y_right, points):
+        delta = np.array([0.05, 0.05])
+        for p in points:
+            x_left = np.min(x_left, p.point[0] + delta[0])
+            y_left = np.min(y_left, p.point[1] + delta[1])
+
+            x_right = np.max(x_right, p.point[0] + delta[0])
+            y_right = np.max(y_right, p.point[1] + delta[1])
+
+        return x_left, y_left, x_right, y_right
+
+    def get_intersection(self, x_left, y_left, x_right, y_right, origin, direction):
+        intersection = None
+        side = Side.left
+
+        t1, t2 = None, None
+
+        if direction[0] > 0.:
+            t1 = (x_right - origin[0]) / direction[0]
+            side = Side.right
+            intersection = origin + t1 * direction
+        elif direction[0] < 0.:
+            t1 = (x_left - origin[0]) / direction[0]
+            side = Side.left
+            intersection = origin + t1 * direction
+
+        if direction[1] > 0.:
+            t2 = (y_right - origin[1]) / direction[1]
+
+            if t2 < t1:
+                side = Side.top
+                intersection = origin + t2 * direction
+        elif direction[1] < 0.:
+            t2 = (y_left - origin[1]) / direction[1]
+
+            if t2 < t1:
+                side = Side.bottom
+                intersection = origin + t2 * direction
+
+        return intersection, side
+
+    def bound(self, x_left, y_left, x_right, y_right):
+        #x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.sites)
+        #x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.vertices)
+
+        if not self.beach_line.is_empty():
+            left_arc = self.beach_line.get_leftmost_arc()
+            right_arc = left_arc.next
+
+            while right_arc is not None:
+                direction = (left_arc.site.point - right_arc.site.point)[[1, 0]]
+                direction[0] *= -1
+
+                origin = (left_arc.site.point + right_arc.site.point) * 0.5
+
+                intersection, side = self.get_intersection(x_left, y_left, x_right, y_right, origin, direction)
+
+                vertex = self.diagram.add_vertex(intersection)
+
+                left_arc.right_half_edge.origin = vertex
+                right_arc.left_half_edge.destination = vertex
+
+                left_arc = right_arc
+                right_arc = right_arc.next

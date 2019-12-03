@@ -90,7 +90,7 @@ class BeachLine:
         arc = self.root
 
         if arc is None:
-            raise RuntimeError('Can\'t get left most arc: tree is empty')
+            return None
 
         while arc.prev is not None:
             arc = arc.prev

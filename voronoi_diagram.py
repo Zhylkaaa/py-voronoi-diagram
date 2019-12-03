@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class VoronoiDiagram:
 
     def __init__(self, points):
@@ -21,13 +24,14 @@ class VoronoiDiagram:
         self.half_edges.append(half_edge)
         return half_edge
 
-    def create_vertex(self, point):
+    def add_vertex(self, point):
 
-        vertex = Vertex(point)
+        vertex = Vertex(np.array(point))
 
         self.vertices.append(vertex)
 
         return vertex
+
 
 class Site:
 

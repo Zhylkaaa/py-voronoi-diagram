@@ -4,19 +4,26 @@ from metrix import l2
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-    points = np.array([[20., 20.], [10., 10.], [20., 30.], [30., 0.]])
+    points = np.array([[2., 2.], [1., 1.], [2., 3.], [3., 0.]])
+
+    points = np.array([np.random.uniform(0, 5, size=(2,)) for _ in range(10)])
+
     fortuna = FortuneAlgorithm(points, metric=l2)
 
     fortuna.construct()
 
+    fortuna.bound(-1.5, -1.5, 6.5, 6.5)
+
     diagram = fortuna.diagram
+
+    plt.xlim((-1, 6))
+    plt.ylim((-1, 6))
 
     plt.scatter(*zip(*points))
 
-    print(diagram.vertices[0].point)
-
     for p in diagram.vertices:
         plt.scatter(*p.point, color='red')
+
 
     for e in diagram.half_edges:
         #print(e.origin, e.destination)
