@@ -288,6 +288,7 @@ class BeachLine:
         if node.next is not None:
             node.next.prev = node.prev
 
+    # TODO: check strange behavior (temporary added if's, but seems to work fine)
     def delete_fixup(self, node):
         # 4 cases
         if node is None:
@@ -299,6 +300,8 @@ class BeachLine:
                 # node is left node
                 node_brother = node.parent.right
 
+                if node_brother is None:
+                    return
                 # case 1: node's red, can not get black node
                 # set brother is black and parent is red
                 if node_brother.color == 1:
@@ -306,6 +309,8 @@ class BeachLine:
                     node.parent.color = 1
                     self.left_rotate(node.parent)
                     node_brother = node.parent.right
+                    if node_brother is None:
+                        return
 
                 # case 2: brother node is black, and its children node is both black
                 if (node_brother.left is None or node_brother.left.color == 0) and (
@@ -320,6 +325,8 @@ class BeachLine:
                         node_brother.left.color = 0
                         self.right_rotate(node_brother)
                         node_brother = node.parent.right
+                        if node_brother is None:
+                            return
 
                     # case 4: brother node is black, and right is red, and left is any color
                     node_brother.color = node.parent.color
@@ -330,11 +337,21 @@ class BeachLine:
                 break
             else:
                 node_brother = node.parent.left
+
+                if node_brother is None:
+                    return
+
                 if node_brother.color == 1:
                     node_brother.color = 0
                     node.parent.color = 1
                     self.left_rotate(node.parent)
+
+                    if node.parent is None:
+                        return
+
                     node_brother = node.parent.right
+                    if node_brother is None:
+                        return
                 if (node_brother.left is None or node_brother.left.color == 0) and (
                         node_brother.right is None or node_brother.right.color == 0):
                     node_brother.color = 1

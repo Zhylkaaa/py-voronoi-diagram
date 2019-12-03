@@ -175,14 +175,15 @@ class FortuneAlgorithm:
         if right_arc.next is not None:
             self.add_event(left_arc, right_arc, right_arc.next, events, event.y)
 
+    # TODO: more sophisticated method to adjust the box
     def adjust_box(self, x_left, y_left, x_right, y_right, points):
-        delta = np.array([0.05, 0.05])
+        delta = np.array([0.1, 0.1])
         for p in points:
-            x_left = np.min(x_left, p.point[0] + delta[0])
-            y_left = np.min(y_left, p.point[1] + delta[1])
+            x_left = min(x_left, p.point[0] + delta[0])
+            y_left = min(y_left, p.point[1] + delta[1])
 
-            x_right = np.max(x_right, p.point[0] + delta[0])
-            y_right = np.max(y_right, p.point[1] + delta[1])
+            x_right = max(x_right, p.point[0] + delta[0])
+            y_right = max(y_right, p.point[1] + delta[1])
 
         return x_left, y_left, x_right, y_right
 
@@ -217,8 +218,8 @@ class FortuneAlgorithm:
         return intersection, side
 
     def bound(self, x_left, y_left, x_right, y_right):
-        #x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.sites)
-        #x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.vertices)
+        x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.sites)
+        x_left, y_left, x_right, y_right = self.adjust_box(x_left, y_left, x_right, y_right, self.diagram.vertices)
 
         if not self.beach_line.is_empty():
             left_arc = self.beach_line.get_leftmost_arc()
