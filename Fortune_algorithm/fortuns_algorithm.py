@@ -35,6 +35,11 @@ class FortuneAlgorithm:
         self.beach_line = BeachLine(self.metric.compute_breakpoint)
 
     def construct(self):
+        """
+        stores Voronoi diagram in self.diagram
+        :return: None
+        """
+
         events = Events()
 
         for s in self.diagram.sites:
@@ -55,6 +60,11 @@ class FortuneAlgorithm:
                 self.handle_circle_event(event, not_valid_events, events)
 
     def break_arc_by_site(self, arc, site):
+        """
+        :param arc: arc to be divided into 3 arcs (left_arc, middle_arc, right_arc)
+        :param site: point which divides arc
+        :return: middle arc
+        """
         middle_arc = Arc(site)
 
         left_arc = Arc(arc.site)
@@ -193,22 +203,24 @@ class FortuneAlgorithm:
 
         t1, t2 = None, None
 
-        if direction[0] > 0.:
+        eps = 1e-6
+
+        if direction[0] > eps:
             t1 = (x_right - origin[0]) / direction[0]
             side = Side.right
             intersection = origin + t1 * direction
-        elif direction[0] < 0.:
+        elif direction[0] < -eps:
             t1 = (x_left - origin[0]) / direction[0]
             side = Side.left
             intersection = origin + t1 * direction
 
-        if direction[1] > 0.:
+        if direction[1] > eps:
             t2 = (y_right - origin[1]) / direction[1]
 
             if t2 < t1:
                 side = Side.top
                 intersection = origin + t2 * direction
-        elif direction[1] < 0.:
+        elif direction[1] < -eps:
             t2 = (y_left - origin[1]) / direction[1]
 
             if t2 < t1:

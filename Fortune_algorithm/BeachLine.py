@@ -100,6 +100,8 @@ class BeachLine:
     def get_arc_above(self, point, l):
         node = self.root
 
+        eps = 1e-8
+
         if node is None:
             return None
 

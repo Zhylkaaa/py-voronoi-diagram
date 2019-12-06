@@ -4,18 +4,29 @@ import matplotlib.pyplot as plt
 import copy
 
 
-def qsort(table, l, r, comparator=lambda x, y: x < y):  # TODO: debug, return doubled elements
+def qsort(table, l, r, comparator=lambda x, y: x < y):
     if l == r:
         return
     m = (l + r) // 2
     pivot = table[m]
     j = l
-    table[r - 1], table[m] = table[m], table[r - 1]
+
+    tmp = copy.copy(table[r - 1])
+    table[r - 1] = table[m]
+    table[m] = tmp
+
     for i in range(l, r - 1):
         if comparator(table[i], pivot):
-            table[i], table[j] = table[j], table[i]
+
+            tmp = copy.copy(table[i])
+            table[i] = table[j]
+            table[j] = tmp
+
             j += 1
-    table[r - 1], table[j] = table[j], table[r - 1]
+
+    tmp = copy.copy(table[r - 1])
+    table[r - 1] = table[j]
+    table[j] = tmp
 
     qsort(table, l, j, comparator)
     qsort(table, j + 1, r, comparator)
@@ -66,14 +77,8 @@ def check_point(point_idx, site_idx, points, vertices):
     for v in vertices:
 
         orientation = get_orientation((point + site) * 0.5, v.point, v.point + v.direction)
-
         if orientation == 1:
-            if site_idx == 3 and point_idx == 1:
-                print('not valid because:', v.idx)
             is_valid = False
-
-    if site_idx == 3 and point_idx == 1:
-        print('is_valid: ', is_valid)
 
     if is_valid:
         direction = (point - site)[[1, 0]]
@@ -164,11 +169,8 @@ def intersection_t(p1, p2, eps=1e-6):
     r = p1.direction
     s = p2.direction * (-1)
 
-    #print('r = ', r)
-    #print('s = ', s)
-
     rxs = r[0] * s[1] - r[1] * s[0]  # if rxs = 0 then lines colinear
-    #print(rxs)
+
     if rxs > eps or rxs < -eps:
         q_p = p2.point - p1.point
         t = (q_p[0] * s[1] - q_p[1] * s[0]) / rxs
@@ -199,8 +201,12 @@ def create_face(vertices):
         t = intersection_t(vertices[idx], vertices[(idx + 1) % n])
 
         if t is not None and t > 0.:
-            vertex = Vertex(vertices[idx].point + t * vertices[idx].direction, None, None,
-                            vertices[idx].site)
+            direction = (vertices[idx].point - vertices[idx].site)[[1, 0]]
+            direction[0] *= -1
+
+            vertex = Vertex(vertices[idx].point + t * vertices[idx].direction,
+                            direction,
+                            None, vertices[idx].site)
 
             vertices[idx].next = vertex
             vertices[(idx + 1) % n].prev = vertex
@@ -222,20 +228,72 @@ def create_face(vertices):
     return face
 
 
-def bound_faces(faces):  # TODO: bound diagram
-    pass
+def get_intersection_with_box(x_left, y_left, x_right, y_right, v):
+
+    direction = v.direction
+    origin = v.point
+
+    intersection = None
+    t1, t2 = None, None
+
+    if direction[0] > 0.:
+        t1 = (x_right - origin[0]) / direction[0]
+        intersection = origin + t1 * direction
+    elif direction[0] < 0.:
+        t1 = (x_left - origin[0]) / direction[0]
+        intersection = origin + t1 * direction
+
+    if direction[1] > 0.:
+        t2 = (y_right - origin[1]) / direction[1]
+
+        if t2 < t1:
+            intersection = origin + t2 * direction
+    elif direction[1] < 0.:
+        t2 = (y_left - origin[1]) / direction[1]
+
+        if t2 < t1:
+            intersection = origin + t2 * direction
+
+    return intersection
+
+
+def bound_faces(faces, x_left, y_left, x_right, y_right):  # TODO: bound diagram
+
+    for face in faces:
+
+        verts = face.vertex.copy()
+
+        for v in verts:
+
+            if v.prev is None:
+                intersection = get_intersection_with_box(x_left, y_left, x_right, y_right, v)
+
+                vertex = Vertex(intersection, None, None, v.site)
+
+                v.prev = vertex
+                vertex.next = v
+                face.vertex.append(vertex)
+
+            if v.next is None:
+                intersection = get_intersection_with_box(x_left, y_left, x_right, y_right, v)
+
+                vertex = Vertex(intersection, None, None, v.site)
+
+                v.next = vertex
+                vertex.prev = v
+                face.vertex.append(vertex)
 
 
 def alphabetic(a, b):
     return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1])
 
 
-def compute_voronoi_diagram(points):
-    print(points)
+def compute_voronoi_diagram(points, x_left, y_left, x_right, y_right):
+    #print(points)
 
-    #qsort(points, 0, len(points), comparator=alphabetic)
+    qsort(points, 0, len(points), comparator=alphabetic)
 
-    print(points)
+    #print(points)
 
     voronoi_vertices = [[] for _ in range(len(points))]
 
@@ -244,19 +302,28 @@ def compute_voronoi_diagram(points):
 
     faces = [create_face(vertices) for vertices in voronoi_vertices]
 
-    #bound_faces(faces)
+    bound_faces(faces, x_left, y_left, x_right, y_right)
 
     return faces, voronoi_vertices
 
 
-if __name__ == '__main__':
-    points = np.array([np.array([1., 1.]), np.array([2., 2.]), np.array([2., 3.]), np.array([3., 0.])])
+def run(n):
+    #points = np.array([np.array([2., 2.]), np.array([1., 1.]), np.array([2., 3.]), np.array([3., 0.])])
+
+    points = np.array([np.random.uniform(0, 4, size=(2,)) for _ in range(n)])
+
+    #points = np.array([(0, 0), (0, 1.), (0.5, 0.5), (1., 0), (1., 1.)])
 
     plt.scatter(*zip(*points))
 
-    faces, voronoi_vertices = compute_voronoi_diagram(points)
+    plt.xlim((-1, 5.1))
+    plt.ylim((-1, 5.1))
 
-    colors = ['c', 'm', 'k', 'r']
+    import time
+    start = time.time()
+    faces, voronoi_vertices = compute_voronoi_diagram(points, -2, -2, 6, 6)
+    end = time.time()
+    #colors = ['c', 'm', 'k', 'r']
 
     '''for i, vertices in enumerate(voronoi_vertices):
         for v in vertices:
@@ -266,8 +333,26 @@ if __name__ == '__main__':
     for i, face in enumerate(faces):
         for v in face.vertex:
             #print('main: ', v.point)
-            plt.scatter(*v.point, color=colors[i])
+            plt.scatter(*v.point, color='red')
             if v.next is not None:
-                plt.plot(*zip(*[v.point, v.next.point]), color=colors[i])
+                plt.plot(*zip(*[v.point, v.next.point]), color='red')
 
+    plt.show()
+
+    return end - start
+
+# TODO: add merging of diagrams (remove intersections between diagrams)
+
+if __name__ == '__main__':
+    times = []
+
+    #ns = [10, 50, 100, 200, 400, 500, 1000]
+
+    ns = [20]
+
+    for i in ns:
+        time = run(i)
+        times.append(time)
+
+    plt.plot(ns, times, marker='o')
     plt.show()
